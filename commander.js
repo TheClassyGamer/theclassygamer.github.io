@@ -11,14 +11,14 @@ var fs = require('fs');
 var cards = JSON.parse(fs.readFileSync('AtomicCards.json', 'utf8'));
 
 var cardNames = Object.keys(cards.data);
-var validCards = {};
+var validCards = [];
 
 for (var i = 0; i < cardNames.length; i++) {
     var cardName = cardNames[i];
 
     if (cards.data[cardName][0].legalities !== undefined && cards.data[cardName][0].legalities.commander === "Legal") {
         var card = cards.data[cardName][0]; // do we really need to handle double sided cards?
-        validCards[cardName] = {
+        validCards.push({
             colorIdentity: card.colorIdentity, // mandatory
             colors: card.colors, // ~0.3MB
             // convertedManaCost: card.convertedManaCost, // duplicate data
@@ -30,7 +30,7 @@ for (var i = 0; i < cardNames.length; i++) {
             // legalities: card.legalities, // unnecessary
             manaCost: card.manaCost, // ~0.4MB
             // manaValue: card.manaValue, // duplicate data
-            // name: card.name, // duplicate data
+            name: card.name, // duplicate data
             printings: card.printings, // ~0.6MB
             purchaseUrls: card.purchaseUrls, // ~5.0MB
             // rulings: card.rulings, // unnecessary
@@ -39,9 +39,10 @@ for (var i = 0; i < cardNames.length; i++) {
             text: card.text, // ~3.6MB
             type: card.type, // ~0.6MB
             // types: card.types // duplicate data
-        };
+        });
     }
 }
 
-console.log(Object.keys(validCards).length);
+// console.log(Object.keys(validCards).length);
+console.log(validCards.length);
 fs.writeFileSync('Commander.json', JSON.stringify(validCards), 'utf8');
