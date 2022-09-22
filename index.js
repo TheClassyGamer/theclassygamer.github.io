@@ -62,7 +62,7 @@ async function createDeck() {
     const colorlessDeck = await db.getAllFromIndex("commander", "colorlessIdentityIndex", []); // this kinda works?
     console.log("Colorless: " + colorlessDeck.length);
     let colorDeck = await db.getAllFromIndex("commander", "colorIdentityIndex", "B"); // do this for each requested colour
-    console.log("Black: " + colorTwoDeck.length);
+    console.log("Black: " + colorDeck.length);
     let colorTwoDeck = await db.getAllFromIndex("commander", "colorIdentityIndex", "W"); // do this for each requested colour
     console.log("White: " + colorTwoDeck.length);
     // why do these searches have so many results? colorless/lands aren't in them but they're only like 500 short
