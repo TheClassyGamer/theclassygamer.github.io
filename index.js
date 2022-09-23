@@ -14,8 +14,7 @@ async function initializeDB() {
             upgrade(db) {
                 db.createObjectStore("meta");
                 const objectStore = db.createObjectStore("commander", { keyPath: "name" });
-                objectStore.createIndex("colorIdentityIndex", "colorIdentity", { multiEntry: true });
-                objectStore.createIndex("colorlessIdentityIndex", "colorIdentity", { multiEntry: false }); // does this actually get colorless?
+                objectStore.createIndex("colorIdentityIndex", "colorIdentity", { multiEntry: false });
             }
         });
         checkVersion();
@@ -47,47 +46,60 @@ async function loadDeck() {
     .then(async cards => {
         const transaction = db.transaction(["meta", "commander"], "readwrite");
 
-        await transaction.objectStore("meta").put(latestVersion, "version");
-
+        // Store each card and track unique "stringified" color identities
+        const colorIdentitiesStrings = [];
         const objectStore = transaction.objectStore("commander");
         cards.forEach((card) => {
             objectStore.put(card);
+            const ci = card.colorIdentity.join();
+            if (colorIdentitiesStrings.indexOf(ci) === -1) {
+                colorIdentitiesStrings.push(ci);
+            }
         });
+
+        // "Destringify" the color identites
+        const colorIdentities = [];
+        colorIdentitiesStrings.forEach((colorIdentitiesString) => {
+            colorIdentities.push(colorIdentitiesString.split(','));
+        });
+
+        // Store the color identities and deck version
+        await transaction.objectStore("meta").put(colorIdentities, "colorIdentities");
+        await transaction.objectStore("meta").put(latestVersion, "version");
 
         await checkVersion();
     });
 }
 
 async function createDeck() {
-    const colorlessDeck = await db.getAllFromIndex("commander", "colorlessIdentityIndex", []); // this kinda works?
-    console.log("Colorless: " + colorlessDeck.length);
-    let colorDeck = await db.getAllFromIndex("commander", "colorIdentityIndex", "B"); // do this for each requested colour
-    console.log("Black: " + colorDeck.length);
-    let colorTwoDeck = await db.getAllFromIndex("commander", "colorIdentityIndex", "W"); // do this for each requested colour
-    console.log("White: " + colorTwoDeck.length);
-    // why do these searches have so many results? colorless/lands aren't in them but they're only like 500 short
+    const selectedColors = getSelectedColors();
+    const colorIdentities = await db.get("meta", "colorIdentities");
+    const selectedColorIdentities = [];
 
-    // for (let i = 0; i < colorDeck.length; i++) {
-    //     if (colorDeck[i].colorIdentity.includes("W") && colorDeck[i].colorIdentity.includes("B")) {
-    //         console.log(colorDeck[i]);
-    //     }
-    // }
+    // Find all color identities which only contain the selected colors
+    colorIdentities.forEach((colorIdentity) => {
+        if (colorIdentity.every(color => selectedColors.includes(color))) {
+            selectedColorIdentities.push(colorIdentity);
+        }
+    });
 
-    const deck = arrayUnique(colorlessDeck.concat(colorDeck).concat(colorTwoDeck));
-    console.log("Combined: " + deck.length);
+    // Find all cards which have the selected color identities
+    let validCards = await db.getAllFromIndex("commander", "colorIdentityIndex", []); // Start with all colorless cards
+    for (let i = 0; i < selectedColorIdentities.length; i++) {
+        validCards = validCards.concat(await db.getAllFromIndex("commander", "colorIdentityIndex", selectedColorIdentities[i]));
+    }
 
-    // take the combined results, choose X, and display them as hyperlinks
-    alert("Not quite there yet...");
+    // choose X valid cards and display them as hyperlinks
+    alert(validCards.length + " valid cards");
 }
 
-// https://stackoverflow.com/questions/1584370/how-to-merge-two-arrays-in-javascript-and-de-duplicate-items
-function arrayUnique(array) {
-    var a = array.concat();
-    for(var i=0; i<a.length; ++i) {
-        for(var j=i+1; j<a.length; ++j) {
-            if(a[i].name === a[j].name)
-                a.splice(j--, 1);
+function getSelectedColors() {
+    const selectedColors = [];
+    const checkboxes = document.getElementsByClassName("colors");
+    for (let i = 0; i < checkboxes.length; i++) {
+        if (checkboxes[i].checked) {
+            selectedColors.push(checkboxes[i].value);
         }
     }
-    return a;
+    return selectedColors;
 }
