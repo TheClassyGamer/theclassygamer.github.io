@@ -43,6 +43,7 @@ async function checkVersion() {
 
 // Load the newest deck into the db and update the version
 async function loadDeck() {
+    document.getElementById("createDeck").disabled = true;
     fetch("Commander.json")
     .then(response => {
         if (!response.ok) {
@@ -68,11 +69,13 @@ async function loadDeck() {
             }
 
             // Track purchase options
-            Object.keys(card.purchaseUrls).forEach((purchaseOption) => {
-                if (purchaseOptions.indexOf(purchaseOption) === -1) {
-                    purchaseOptions.push(purchaseOption);
-                }
-            });
+            if (card.purchaseUrls) {
+                Object.keys(card.purchaseUrls).forEach((purchaseOption) => {
+                    if (purchaseOptions.indexOf(purchaseOption) === -1) {
+                        purchaseOptions.push(purchaseOption);
+                    }
+                });
+            }
         });
 
         // "Destringify" the color identities
@@ -113,7 +116,7 @@ async function createDeck() {
     for (let i = 0; i < 70; i++) {
         const randomCard = validCards[getRandomInt(validCards.length)];
 
-        let cardUrl = getCardUrl(randomCard.purchaseUrls);
+        let cardUrl = getCardUrl(randomCard);
         cardUrl = cardUrl !== undefined ? `href="${cardUrl}"` : "";
         const manaCost = randomCard.manaCost === undefined ? "" : randomCard.manaCost;
 
@@ -134,8 +137,12 @@ function getSelectedColors() {
 }
 
 // Returns the first applicable purchase URL (allow setting specific or preference?)
-function getCardUrl(purchaseUrls) {
-    return purchaseUrls[Object.keys(purchaseUrls)[0]];
+// Supports the optional key "purchaseUrl", which is generated with Commander.json
+function getCardUrl(card) {
+    if (card.purchaseUrls) {
+        return card.purchaseUrls[Object.keys(card.purchaseUrls)[0]];
+    }
+    return card.purchaseUrl;
 }
 
 // Gets a random int [0, max)

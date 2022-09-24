@@ -32,7 +32,8 @@ for (var i = 0; i < cardNames.length; i++) {
             // manaValue: card.manaValue, // duplicate data
             name: card.name, // mandatory
             // printings: card.printings, // ~0.6MB
-            purchaseUrls: card.purchaseUrls, // ~5.0MB
+            // purchaseUrls: card.purchaseUrls, // ~5.0MB
+            purchaseUrl: card.purchaseUrls[Object.keys(card.purchaseUrls)[0]], // ~1.3MB
             // rulings: card.rulings, // unnecessary
             // subtypes: card.subtypes, // duplicate data
             // supertypes: card.supertypes, // duplicate data
