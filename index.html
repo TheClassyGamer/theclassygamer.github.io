@@ -10,6 +10,8 @@
             <p>MTG Commander Deck Randomizer</p>
             <p id="latestVersion">Latest Version:</p>
             <p id="currentVersion">Current Version:</p>
+        </div>
+        <div>
             <input type="checkbox" class="colors" id="white" value="W">
             <label for="white">White</label><br>
             <input type="checkbox" class="colors" id="blue" value="U">
@@ -20,9 +22,12 @@
             <label for="red">Red</label><br>
             <input type="checkbox" class="colors" id="green" value="G">
             <label for="green">Green</label><br><br>
+        </div>
+        <div>
             <button id="loadDeck" onClick="loadDeck()">Load Deck</button>
             <button id="createDeck" onClick="createDeck()">Create Deck</button>
         </div>
+        <div id="deck"></div>
     </body>
     <script src="index.js"></script>
 </html>

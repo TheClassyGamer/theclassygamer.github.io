@@ -9,6 +9,8 @@ document.getElementById("latestVersion").innerText = ("Latest Version: " + lates
 // Open and initialize DB
 initializeDB(); // We want to do this on page load
 async function initializeDB() {
+    document.getElementById("loadDeck").disabled = true;
+    document.getElementById("createDeck").disabled = true;
     try {
         db = await idb.openDB(dbName, latestDBVersion, {
             upgrade(db) {
@@ -17,11 +19,10 @@ async function initializeDB() {
                 objectStore.createIndex("colorIdentityIndex", "colorIdentity", { multiEntry: false });
             }
         });
+        document.getElementById("loadDeck").disabled = false;
         checkVersion();
     } catch {
         document.getElementById("currentVersion").innerText = ("Your browser doesn't support IndexedDB :(");
-        document.getElementById("loadDeck").disabled = true;
-        document.getElementById("createDeck").disabled = true;
     }
 }
 
@@ -31,7 +32,13 @@ async function checkVersion() {
     let objectStore = transaction.objectStore("meta");
 
     let version = await objectStore.get("version");
-    document.getElementById("currentVersion").innerText = "Current Version: " + (version === undefined ? "Not loaded" : version);
+
+    if (version === undefined) {
+        document.getElementById("currentVersion").innerText = "Current Version: Not loaded";
+    } else {
+        document.getElementById("currentVersion").innerText = "Current Version: " + version;
+        document.getElementById("createDeck").disabled = false;
+    }
 }
 
 // Load the newest deck into the db and update the version
@@ -46,25 +53,37 @@ async function loadDeck() {
     .then(async cards => {
         const transaction = db.transaction(["meta", "commander"], "readwrite");
 
-        // Store each card and track unique "stringified" color identities
+        // Store card data
         const colorIdentitiesStrings = [];
+        const purchaseOptions = [];
         const objectStore = transaction.objectStore("commander");
         cards.forEach((card) => {
+            // Store the card
             objectStore.put(card);
+
+            // Track unique "stringified" color identities
             const ci = card.colorIdentity.join();
             if (colorIdentitiesStrings.indexOf(ci) === -1) {
                 colorIdentitiesStrings.push(ci);
             }
+
+            // Track purchase options
+            Object.keys(card.purchaseUrls).forEach((purchaseOption) => {
+                if (purchaseOptions.indexOf(purchaseOption) === -1) {
+                    purchaseOptions.push(purchaseOption);
+                }
+            });
         });
 
-        // "Destringify" the color identites
+        // "Destringify" the color identities
         const colorIdentities = [];
         colorIdentitiesStrings.forEach((colorIdentitiesString) => {
             colorIdentities.push(colorIdentitiesString.split(','));
         });
 
-        // Store the color identities and deck version
+        // Store the collected metadata
         await transaction.objectStore("meta").put(colorIdentities, "colorIdentities");
+        await transaction.objectStore("meta").put(purchaseOptions, "purchaseOptions");
         await transaction.objectStore("meta").put(latestVersion, "version");
 
         await checkVersion();
@@ -89,10 +108,20 @@ async function createDeck() {
         validCards = validCards.concat(await db.getAllFromIndex("commander", "colorIdentityIndex", selectedColorIdentities[i]));
     }
 
-    // choose X valid cards and display them as hyperlinks
-    alert(validCards.length + " valid cards");
+    // Choose 70 valid cards and display them as hyperlinks
+    document.getElementById("deck").innerHTML = "";
+    for (let i = 0; i < 70; i++) {
+        const randomCard = validCards[getRandomInt(validCards.length)];
+
+        let cardUrl = getCardUrl(randomCard.purchaseUrls);
+        cardUrl = cardUrl !== undefined ? `href="${cardUrl}"` : "";
+        const manaCost = randomCard.manaCost === undefined ? "" : randomCard.manaCost;
+
+        document.getElementById("deck").innerHTML += `<br><a ${cardUrl}>${manaCost} ${randomCard.name}</a>`;
+    }
 }
 
+// Returns an array of the selected colours as their letter shorthands
 function getSelectedColors() {
     const selectedColors = [];
     const checkboxes = document.getElementsByClassName("colors");
@@ -102,4 +131,14 @@ function getSelectedColors() {
         }
     }
     return selectedColors;
+}
+
+// Returns the first applicable purchase URL (allow setting specific or preference?)
+function getCardUrl(purchaseUrls) {
+    return purchaseUrls[Object.keys(purchaseUrls)[0]];
+}
+
+// Gets a random int [0, max)
+function getRandomInt(max) {
+    return Math.random() * max | 0;
 }

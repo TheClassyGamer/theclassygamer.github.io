@@ -20,24 +20,24 @@ for (var i = 0; i < cardNames.length; i++) {
         var card = cards.data[cardName][0]; // do we really need to handle double sided cards?
         validCards.push({
             colorIdentity: card.colorIdentity, // mandatory
-            colors: card.colors, // ~0.3MB
+            // colors: card.colors, // ~0.3MB
             // convertedManaCost: card.convertedManaCost, // duplicate data
             // edhrecRank: card.edhrecRank, // unnecessary
             // foreignData: card.foreignData, // unnecessary
-            identifiers: card.identifiers, // ~1.7MB
+            // identifiers: card.identifiers, // ~1.7MB
             // keywords: card.keywords, // unnecessary
             // layout: card.layout, // unnecessary
             // legalities: card.legalities, // unnecessary
             manaCost: card.manaCost, // ~0.4MB
             // manaValue: card.manaValue, // duplicate data
-            name: card.name, // duplicate data
-            printings: card.printings, // ~0.6MB
+            name: card.name, // mandatory
+            // printings: card.printings, // ~0.6MB
             purchaseUrls: card.purchaseUrls, // ~5.0MB
             // rulings: card.rulings, // unnecessary
             // subtypes: card.subtypes, // duplicate data
             // supertypes: card.supertypes, // duplicate data
-            text: card.text, // ~3.6MB
-            type: card.type, // ~0.6MB
+            // text: card.text, // ~3.6MB
+            // type: card.type, // ~0.6MB
             // types: card.types // duplicate data
         });
     }
