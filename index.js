@@ -9,8 +9,8 @@ document.getElementById("latestVersion").innerText = ("Latest Version: " + lates
 // Open and initialize DB
 initializeDB(); // We want to do this on page load
 async function initializeDB() {
-    document.getElementById("loadDeck").disabled = true;
-    document.getElementById("createDeck").disabled = true;
+    document.getElementById("load").disabled = true;
+    document.getElementById("create").disabled = true;
     try {
         db = await idb.openDB(dbName, latestDBVersion, {
             upgrade(db) {
@@ -19,7 +19,7 @@ async function initializeDB() {
                 objectStore.createIndex("colorIdentityIndex", "colorIdentity", { multiEntry: false });
             }
         });
-        document.getElementById("loadDeck").disabled = false;
+        document.getElementById("load").disabled = false;
         checkVersion();
     } catch {
         document.getElementById("currentVersion").innerText = ("Your browser doesn't support IndexedDB :(");
@@ -37,13 +37,14 @@ async function checkVersion() {
         document.getElementById("currentVersion").innerText = "Current Version: Not loaded";
     } else {
         document.getElementById("currentVersion").innerText = "Current Version: " + version;
-        document.getElementById("createDeck").disabled = false;
+        document.getElementById("create").disabled = false;
     }
 }
 
 // Load the newest deck into the db and update the version
-async function loadDeck() {
-    document.getElementById("createDeck").disabled = true;
+async function load() {
+    document.getElementById("load").disabled = true;
+    document.getElementById("create").disabled = true;
     fetch("Commander.json")
     .then(response => {
         if (!response.ok) {
@@ -89,11 +90,15 @@ async function loadDeck() {
         await transaction.objectStore("meta").put(purchaseOptions, "purchaseOptions");
         await transaction.objectStore("meta").put(latestVersion, "version");
 
+        document.getElementById("load").disabled = false;
+
         await checkVersion();
     });
 }
 
-async function createDeck() {
+async function create() {
+    document.getElementById("create").disabled = true;
+
     const selectedColors = getSelectedColors();
     const colorIdentities = await db.get("meta", "colorIdentities");
     const selectedColorIdentities = [];
@@ -122,6 +127,8 @@ async function createDeck() {
 
         document.getElementById("deck").innerHTML += `<br><a ${cardUrl}>${manaCost} ${randomCard.name}</a>`;
     }
+    
+    document.getElementById("create").disabled = false;
 }
 
 // Returns an array of the selected colours as their letter shorthands

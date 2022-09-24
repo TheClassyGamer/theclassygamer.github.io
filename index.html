@@ -12,6 +12,9 @@
             <p id="currentVersion">Current Version:</p>
         </div>
         <div>
+            <button id="load" onClick="load()">Load Commander Data</button><br><br>
+        </div>
+        <div>
             <input type="checkbox" class="colors" id="white" value="W">
             <label for="white">White</label><br>
             <input type="checkbox" class="colors" id="blue" value="U">
@@ -24,8 +27,7 @@
             <label for="green">Green</label><br><br>
         </div>
         <div>
-            <button id="loadDeck" onClick="loadDeck()">Load Deck</button>
-            <button id="createDeck" onClick="createDeck()">Create Deck</button>
+            <button id="create" onClick="create()">Create Deck</button>
         </div>
         <div id="deck"></div>
     </body>
